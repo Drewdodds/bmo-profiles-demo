@@ -1,0 +1,3 @@
+optimizations:
+  bundle_entity_vars: true
+  bundle_entity_vars_strategy: aggressive

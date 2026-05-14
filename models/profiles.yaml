@@ -1,0 +1,279 @@
+# =============================================================================
+# profiles.yaml — ID graph + customer feature group for BMO demo.
+#
+# One id_stitcher (`customer_id_stitcher`) merges identifiers across web,
+# marketing, iOS, Android, ETL CUSTOMER, and OneTrust consent records into a
+# unified `universal_id`. `customer_features` is the var_group materialized as
+# the `customer_features` feature view that powers Audience Builder.
+#
+# Demo time anchor: '2026-05-14' (demo_today). 30d window starts 2026-04-14.
+# =============================================================================
+models:
+  # ---------------------------------------------------------------------------
+  # ID Graph: customer
+  # ---------------------------------------------------------------------------
+  - name: customer_id_stitcher
+    model_type: id_stitcher
+    model_spec:
+      entity_key: customer
+      log_direct_edge_info: true
+      log_node_metadata: true
+      materialization:
+        run_type: incremental
+      edge_sources:
+        # Web app event tables
+        - from: inputs/rsBmoWebAppIdentifies
+        - from: inputs/rsBmoWebAppPages
+        - from: inputs/rsBmoWebAppTracks
+        - from: inputs/rsBmoWebAppLogin
+        - from: inputs/rsBmoWebAppViewOffer
+        - from: inputs/rsBmoWebAppDismissOffer
+        - from: inputs/rsBmoWebAppTransactionView
+        # Marketing site event tables
+        - from: inputs/rsBmoMarketingSiteIdentifies
+        - from: inputs/rsBmoMarketingSitePages
+        - from: inputs/rsBmoMarketingSiteTracks
+        - from: inputs/rsBmoMarketingSiteCtaClick
+        - from: inputs/rsBmoMarketingSiteFormStart
+        - from: inputs/rsBmoMarketingSiteFormSubmit
+        - from: inputs/rsBmoMarketingSiteConsentUpdated
+        # iOS app event tables
+        - from: inputs/rsBmoIosAppIdentifies
+        - from: inputs/rsBmoIosAppScreens
+        - from: inputs/rsBmoIosAppTracks
+        - from: inputs/rsBmoIosAppAppOpen
+        - from: inputs/rsBmoIosAppMortgageCalculatorUsed
+        - from: inputs/rsBmoIosAppLogin
+        - from: inputs/rsBmoIosAppTransactionView
+        # Android app event tables
+        - from: inputs/rsBmoAndroidAppIdentifies
+        - from: inputs/rsBmoAndroidAppScreens
+        - from: inputs/rsBmoAndroidAppTracks
+        - from: inputs/rsBmoAndroidAppAppOpen
+        - from: inputs/rsBmoAndroidAppMortgageCalculatorUsed
+        - from: inputs/rsBmoAndroidAppLogin
+        - from: inputs/rsBmoAndroidAppTransactionView
+        # ETL multi-id carriers
+        - from: inputs/rsBmoEtlCustomer
+        - from: inputs/rsBmoEtlOneTrustConsent
+var_groups:
+  # ===========================================================================
+  # customer_features — THE feature view that powers all 3 BMO audiences.
+  # ===========================================================================
+  - name: customer_features
+    entity_key: customer
+    vars:
+      # ---- Identity / firmographic (from rsBmoEtlCustomer) -----------------
+      - entity_var:
+          name: universal_id
+          select: max(universal_id)
+          from: inputs/rsBmoEtlCustomer
+          description: Canonical universal_id from the core banking CUSTOMER table.
+      - entity_var:
+          name: customer_id
+          select: max(customer_id)
+          from: inputs/rsBmoEtlCustomer
+          description: CRM-side customer_id (e.g. C-100001) joined off the customer entity.
+      - entity_var:
+          name: first_name
+          select: max(first_name)
+          from: inputs/rsBmoEtlCustomer
+          description: Customer first name from core banking.
+      - entity_var:
+          name: last_name
+          select: max(last_name)
+          from: inputs/rsBmoEtlCustomer
+          description: Customer last name from core banking.
+      - entity_var:
+          name: province
+          select: max(province)
+          from: inputs/rsBmoEtlCustomer
+          description: Province of residence (Ontario, Quebec, BC, Alberta, ...). Drives jurisdiction-aware audiences.
+      - entity_var:
+          name: jurisdiction_consent_class
+          select: max(jurisdiction_consent_class)
+          from: inputs/rsBmoEtlCustomer
+          description: Privacy regime classification — PIPEDA (non-Quebec) or Law25 (Quebec).
+      - entity_var:
+          name: tenure_months
+          select: datediff(month, max(created_at), '2026-05-14'::timestamp_ntz)
+          from: inputs/rsBmoEtlCustomer
+          description: Months since customer record was created (relative to demo_today 2026-05-14).
+      # ---- Holdings (from rsBmoEtlAccount) ---------------------------------
+      - entity_var:
+          name: has_checking
+          select: max(case when account_type = 'checking' and status = 'active' then true else false end)
+          from: inputs/rsBmoEtlAccount
+          description: True if the customer has any active checking account.
+      - entity_var:
+          name: has_credit_card
+          select: max(case when account_type = 'credit_card' and status = 'active' then true else false end)
+          from: inputs/rsBmoEtlAccount
+          description: True if the customer has any active credit card account.
+      - entity_var:
+          name: has_mortgage
+          select: max(case when account_type = 'mortgage' and status = 'active' then true else false end)
+          from: inputs/rsBmoEtlAccount
+          description: True if the customer has any active mortgage account.
+      - entity_var:
+          name: total_accounts
+          select: count(distinct case when status = 'active' then account_id end)
+          from: inputs/rsBmoEtlAccount
+          description: Count of distinct active accounts of any type.
+      - entity_var:
+          name: aggregate_balance_30d_avg
+          select: max(aggregate_balance_30d_avg)
+          from: models/customer_province_percentiles
+          description: Customer's average aggregate balance across all accounts in the last 30 days (from province percentile model).
+      # ---- Credit (from rsBmoEtlCreditProfile / rsBmoEtlEligibility) -------
+      - entity_var:
+          name: credit_score_band
+          select: max(credit_score_band)
+          from: inputs/rsBmoEtlCreditProfile
+          description: Latest credit score band — excellent / good / fair / poor.
+      - entity_var:
+          name: credit_utilization_pct
+          select: max(credit_utilization_pct)
+          from: inputs/rsBmoEtlCreditProfile
+          description: Latest credit utilization percentage (0.00-1.00). Used to qualify CC-limit-increase audience.
+      - entity_var:
+          name: is_eligible_credit_limit_inc
+          select: max(case when product_code = 'CC_LIMIT_INC_5K' and eligible_flag = true then true else false end)
+          from: inputs/rsBmoEtlEligibility
+          description: True if customer is flagged eligible for the $5K credit limit increase offer.
+      - entity_var:
+          name: is_eligible_mortgage_premier
+          select: max(case when product_code = 'MORTGAGE_PREMIER' and eligible_flag = true then true else false end)
+          from: inputs/rsBmoEtlEligibility
+          description: True if customer is flagged eligible for the MORTGAGE_PREMIER product offer.
+      # ---- Intent: mortgage page views (marketing site) --------------------
+      - entity_var:
+          name: mortgage_page_views_7d
+          select: count(*)
+          from: inputs/rsBmoMarketingSitePages
+          where: "properties_path like '%mortgage%' and timestamp >= '2026-05-07'::timestamp_ntz"
+          description: Count of marketing-site page views on any /mortgage* path in the last 7 days.
+      # ---- Intent: mortgage calculator (per-OS subtotals + combined) -------
+      - entity_var:
+          name: mortgage_calculator_uses_ios_30d
+          select: count(*)
+          from: inputs/rsBmoIosAppMortgageCalculatorUsed
+          where: "timestamp >= '2026-04-14'::timestamp_ntz"
+          description: Last-30d iOS mortgage calculator use count (subtotal).
+      - entity_var:
+          name: mortgage_calculator_uses_android_30d
+          select: count(*)
+          from: inputs/rsBmoAndroidAppMortgageCalculatorUsed
+          where: "timestamp >= '2026-04-14'::timestamp_ntz"
+          description: Last-30d Android mortgage calculator use count (subtotal).
+      - entity_var:
+          name: mortgage_calculator_uses_30d
+          select: "coalesce({{customer.Var('mortgage_calculator_uses_ios_30d')}}, 0) + coalesce({{customer.Var('mortgage_calculator_uses_android_30d')}}, 0)"
+          description: Combined iOS+Android mortgage calculator uses in the last 30 days.
+      # ---- Intent: app sessions (per-OS subtotals + combined) --------------
+      - entity_var:
+          name: app_sessions_ios_30d
+          select: count(distinct context_session_id)
+          from: inputs/rsBmoIosAppAppOpen
+          where: "timestamp >= '2026-04-14'::timestamp_ntz"
+          description: Distinct iOS app sessions opened in the last 30 days.
+      - entity_var:
+          name: app_sessions_android_30d
+          select: count(distinct context_session_id)
+          from: inputs/rsBmoAndroidAppAppOpen
+          where: "timestamp >= '2026-04-14'::timestamp_ntz"
+          description: Distinct Android app sessions opened in the last 30 days.
+      - entity_var:
+          name: app_sessions_30d
+          select: "coalesce({{customer.Var('app_sessions_ios_30d')}}, 0) + coalesce({{customer.Var('app_sessions_android_30d')}}, 0)"
+          description: Combined iOS+Android distinct app sessions in the last 30 days.
+      # ---- Intent: login recency (across web + mobile) ---------------------
+      - entity_var:
+          name: last_login_web_at
+          select: max(timestamp)
+          from: inputs/rsBmoWebAppLogin
+          description: Most recent successful web app login timestamp.
+      - entity_var:
+          name: last_login_ios_at
+          select: max(timestamp)
+          from: inputs/rsBmoIosAppLogin
+          description: Most recent iOS app login timestamp.
+      - entity_var:
+          name: last_login_android_at
+          select: max(timestamp)
+          from: inputs/rsBmoAndroidAppLogin
+          description: Most recent Android app login timestamp.
+      - entity_var:
+          name: days_since_last_login
+          select: "least(coalesce(datediff(day, {{customer.Var('last_login_web_at')}}, '2026-05-14'::timestamp_ntz), 9999), coalesce(datediff(day, {{customer.Var('last_login_ios_at')}}, '2026-05-14'::timestamp_ntz), 9999), coalesce(datediff(day, {{customer.Var('last_login_android_at')}}, '2026-05-14'::timestamp_ntz), 9999))"
+          description: Smallest day-gap since last login across web, iOS, Android (defaults to 9999 if no login).
+      - entity_var:
+          name: web_logins_14d
+          select: count(*)
+          from: inputs/rsBmoWebAppLogin
+          where: "timestamp >= '2026-04-30'::timestamp_ntz and properties_success = true"
+          description: Count of successful web app logins in the last 14 days.
+      # ---- Consent latest-state (from rsBmoEtlOneTrustConsent) -------------
+      - entity_var:
+          name: marketing_consent_state
+          select: first_value(consent_state)
+          window:
+            order_by:
+              - recorded_at desc
+          from: inputs/rsBmoEtlOneTrustConsent
+          where: "consent_category = 'marketing'"
+          description: Latest OneTrust consent state for the 'marketing' category — granted or denied.
+      - entity_var:
+          name: analytics_consent_state
+          select: first_value(consent_state)
+          window:
+            order_by:
+              - recorded_at desc
+          from: inputs/rsBmoEtlOneTrustConsent
+          where: "consent_category = 'analytics'"
+          description: Latest OneTrust consent state for the 'analytics' category.
+      - entity_var:
+          name: personalization_consent_state
+          select: first_value(consent_state)
+          window:
+            order_by:
+              - recorded_at desc
+          from: inputs/rsBmoEtlOneTrustConsent
+          where: "consent_category = 'personalization'"
+          description: Latest OneTrust consent state for the 'personalization' category. Gates personalization audiences.
+      - entity_var:
+          name: email_consent_state
+          select: "{{customer.Var('marketing_consent_state')}}"
+          description: Alias of marketing_consent_state — used by email channel gating.
+      # ---- Branch visits (from rsBmoEtlBranchVisit) ------------------------
+      - entity_var:
+          name: branch_visits_60d
+          select: count(distinct visit_id)
+          from: inputs/rsBmoEtlBranchVisit
+          where: "visit_date >= '2026-03-15'::date"
+          description: Distinct branch visits in the last 60 days.
+      - entity_var:
+          name: last_branch_visit_reason
+          select: first_value(visit_reason)
+          window:
+            order_by:
+              - visit_date desc
+          from: inputs/rsBmoEtlBranchVisit
+          description: Reason code of the most recent branch visit (mortgage_consult / general / account_opening / dispute).
+      - entity_var:
+          name: had_mortgage_consult_30d
+          select: max(case when visit_reason = 'mortgage_consult' and visit_date >= '2026-04-14'::date then true else false end)
+          from: inputs/rsBmoEtlBranchVisit
+          description: True if customer had at least one in-branch mortgage consult in the last 30 days.
+      # ---- Historical DMP segments (Adobe AAM) -----------------------------
+      - entity_var:
+          name: aam_segment_ids
+          select: listagg(distinct segment_name, ',')
+          from: inputs/rsBmoEtlAdobeAamSegment
+          description: Comma-separated list of Adobe AAM segment names assigned to the customer (historical DMP carryover).
+      # ---- Cohort percentile (from sql_template) ---------------------------
+      - entity_var:
+          name: aggregate_balance_pctile_in_province
+          select: max(aggregate_balance_pctile_in_province)
+          from: models/customer_province_percentiles
+          description: Customer's PERCENT_RANK of 30d-avg aggregate balance within their province cohort (0.0-1.0).

@@ -1,0 +1,40 @@
+# =============================================================================
+# sql_models.yaml — Cross-customer SQL templates.
+#
+# customer_province_percentiles: computes each customer's 30-day average
+# aggregate balance and their PERCENT_RANK within their province. Drives the
+# "high-value within province" cohort comparison in audience builder.
+# =============================================================================
+models:
+  - name: customer_province_percentiles
+    model_type: sql_template
+    model_spec:
+      occurred_at_col: timestamp
+      materialization:
+        output_type: ephemeral
+        run_type: discrete
+      single_sql: |
+        {% with bal = this.DeRef("inputs/rsBmoEtlBalanceDaily") acc = this.DeRef("inputs/rsBmoEtlAccount") cust = this.DeRef("inputs/rsBmoEtlCustomer") %}
+        WITH cust_bal AS (
+            SELECT c.universal_id,
+                   c.province,
+                   AVG(b.balance) AS aggregate_balance_30d_avg
+            FROM {{cust}} c
+            JOIN {{acc}} a ON a.universal_id = c.universal_id
+            JOIN {{bal}} b ON b.account_id = a.account_id
+            WHERE b.as_of_date >= '2026-04-14'::DATE
+            GROUP BY c.universal_id, c.province
+        )
+        SELECT universal_id,
+               province,
+               aggregate_balance_30d_avg,
+               PERCENT_RANK() OVER (
+                   PARTITION BY province
+                   ORDER BY aggregate_balance_30d_avg
+               ) AS aggregate_balance_pctile_in_province
+        FROM cust_bal
+        {% endwith %}
+      ids:
+        - select: universal_id
+          type: universal_id
+          entity: customer

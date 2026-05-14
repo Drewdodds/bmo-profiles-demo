@@ -1,0 +1,75 @@
+name: bmo_profiles_demo
+schema_version: 98
+connection: bmo_demo
+model_folders:
+  - models
+entities:
+  - name: customer
+    id_stitcher: models/customer_id_stitcher
+    id_types:
+      - universal_id
+      - customer_id
+      - user_id
+      - anonymous_id
+      - email
+      - ios_idfv
+      - android_advertising_id
+    feature_views:
+      name: customer_features
+id_types:
+  - name: universal_id
+    filters:
+      - type: exclude
+        value: ""
+      - type: exclude
+        value: "unknown"
+      - type: exclude
+        value: "NA"
+  - name: customer_id
+    filters:
+      - type: exclude
+        value: ""
+      - type: exclude
+        value: "unknown"
+      - type: exclude
+        value: "NA"
+  - name: user_id
+    filters:
+      - type: exclude
+        value: ""
+      - type: exclude
+        value: "unknown"
+      - type: exclude
+        value: "NA"
+  - name: anonymous_id
+    filters:
+      - type: exclude
+        value: ""
+      - type: exclude
+        value: "unknown"
+      - type: exclude
+        value: "NA"
+  - name: email_hash
+    filters:
+      - type: exclude
+        value: ""
+      - type: exclude
+        value: "unknown"
+      - type: exclude
+        value: "NA"
+  - name: ios_idfv
+    filters:
+      - type: exclude
+        value: ""
+      - type: exclude
+        value: "unknown"
+      - type: exclude
+        value: "NA"
+  - name: android_advertising_id
+    filters:
+      - type: exclude
+        value: ""
+      - type: exclude
+        value: "unknown"
+      - type: exclude
+        value: "NA"

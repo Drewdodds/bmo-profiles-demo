@@ -1,0 +1,491 @@
+# =============================================================================
+# inputs.yaml — Map BMO warehouse tables to the customer entity.
+#
+# Five source schemas:
+#   BMO_WEB_APP       — authenticated banking web (RudderStack JS SDK)
+#   BMO_MARKETING_SITE— public marketing site (RudderStack JS SDK)
+#   BMO_IOS_APP       — iOS banking app (RudderStack Swift SDK)
+#   BMO_ANDROID_APP   — Android banking app (RudderStack Kotlin SDK)
+#   BMO_ETL          — Fivetran-loaded core banking, CRM, OneTrust, Adobe AAM
+#
+# Naming: rs<TitleCase>, e.g. rsBmoWebAppLogin, rsBmoEtlCustomer.
+# Event tables expose USER_ID / ANONYMOUS_ID / CONTEXT_TRAITS_UNIVERSAL_ID.
+# ETL tables expose UNIVERSAL_ID / CUSTOMER_ID / EMAIL_HASH where applicable.
+# =============================================================================
+inputs:
+  # ---------------------------------------------------------------------------
+  # BMO_WEB_APP — authenticated banking web
+  # ---------------------------------------------------------------------------
+  - name: rsBmoWebAppIdentifies
+    app_defaults:
+      table: BMO_WEB_APP.IDENTIFIES
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoWebAppPages
+    app_defaults:
+      table: BMO_WEB_APP.PAGES
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoWebAppTracks
+    app_defaults:
+      table: BMO_WEB_APP.TRACKS
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoWebAppLogin
+    app_defaults:
+      table: BMO_WEB_APP.LOGIN
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoWebAppViewOffer
+    app_defaults:
+      table: BMO_WEB_APP.VIEW_OFFER
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoWebAppDismissOffer
+    app_defaults:
+      table: BMO_WEB_APP.DISMISS_OFFER
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoWebAppTransactionView
+    app_defaults:
+      table: BMO_WEB_APP.TRANSACTION_VIEW
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  # ---------------------------------------------------------------------------
+  # BMO_MARKETING_SITE — anonymous public site, identifies on form submit/login
+  # ---------------------------------------------------------------------------
+  - name: rsBmoMarketingSiteIdentifies
+    app_defaults:
+      table: BMO_MARKETING_SITE.IDENTIFIES
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoMarketingSitePages
+    app_defaults:
+      table: BMO_MARKETING_SITE.PAGES
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoMarketingSiteTracks
+    app_defaults:
+      table: BMO_MARKETING_SITE.TRACKS
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoMarketingSiteCtaClick
+    app_defaults:
+      table: BMO_MARKETING_SITE.CTA_CLICK
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoMarketingSiteFormStart
+    app_defaults:
+      table: BMO_MARKETING_SITE.FORM_START
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoMarketingSiteFormSubmit
+    app_defaults:
+      table: BMO_MARKETING_SITE.FORM_SUBMIT
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoMarketingSiteConsentUpdated
+    app_defaults:
+      table: BMO_MARKETING_SITE.CONSENT_UPDATED
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  # ---------------------------------------------------------------------------
+  # BMO_IOS_APP — iOS banking app
+  # ---------------------------------------------------------------------------
+  - name: rsBmoIosAppIdentifies
+    app_defaults:
+      table: BMO_IOS_APP.IDENTIFIES
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoIosAppScreens
+    app_defaults:
+      table: BMO_IOS_APP.SCREENS
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoIosAppTracks
+    app_defaults:
+      table: BMO_IOS_APP.TRACKS
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoIosAppAppOpen
+    app_defaults:
+      table: BMO_IOS_APP.APP_OPEN
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoIosAppMortgageCalculatorUsed
+    app_defaults:
+      table: BMO_IOS_APP.MORTGAGE_CALCULATOR_USED
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoIosAppLogin
+    app_defaults:
+      table: BMO_IOS_APP.LOGIN
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoIosAppTransactionView
+    app_defaults:
+      table: BMO_IOS_APP.TRANSACTION_VIEW
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  # ---------------------------------------------------------------------------
+  # BMO_ANDROID_APP — Android banking app
+  # ---------------------------------------------------------------------------
+  - name: rsBmoAndroidAppIdentifies
+    app_defaults:
+      table: BMO_ANDROID_APP.IDENTIFIES
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoAndroidAppScreens
+    app_defaults:
+      table: BMO_ANDROID_APP.SCREENS
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoAndroidAppTracks
+    app_defaults:
+      table: BMO_ANDROID_APP.TRACKS
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoAndroidAppAppOpen
+    app_defaults:
+      table: BMO_ANDROID_APP.APP_OPEN
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoAndroidAppMortgageCalculatorUsed
+    app_defaults:
+      table: BMO_ANDROID_APP.MORTGAGE_CALCULATOR_USED
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoAndroidAppLogin
+    app_defaults:
+      table: BMO_ANDROID_APP.LOGIN
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoAndroidAppTransactionView
+    app_defaults:
+      table: BMO_ANDROID_APP.TRANSACTION_VIEW
+      occurred_at_col: TIMESTAMP
+      ids:
+        - select: USER_ID
+          type: user_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+        - select: CONTEXT_TRAITS_UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  # ---------------------------------------------------------------------------
+  # BMO_ETL — core banking / CRM / OneTrust / Adobe AAM (Fivetran-loaded)
+  # ---------------------------------------------------------------------------
+  - name: rsBmoEtlCustomer
+    app_defaults:
+      table: BMO_ETL.CUSTOMER
+      occurred_at_col: CREATED_AT
+      ids:
+        - select: UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+        - select: CUSTOMER_ID
+          type: customer_id
+          entity: customer
+        - select: EMAIL_HASH
+          type: email_hash
+          entity: customer
+  - name: rsBmoEtlAccount
+    app_defaults:
+      table: BMO_ETL.ACCOUNT
+      occurred_at_col: OPENED_AT
+      ids:
+        - select: UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoEtlCreditProfile
+    app_defaults:
+      table: BMO_ETL.CREDIT_PROFILE
+      occurred_at_col: COMPUTED_AT
+      ids:
+        - select: UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoEtlEligibility
+    app_defaults:
+      table: BMO_ETL.ELIGIBILITY
+      occurred_at_col: ELIGIBILITY_COMPUTED_AT
+      ids:
+        - select: UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoEtlBranchVisit
+    app_defaults:
+      table: BMO_ETL.BRANCH_VISIT
+      occurred_at_col: VISIT_DATE
+      ids:
+        - select: UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoEtlAdobeAamSegment
+    app_defaults:
+      table: BMO_ETL.ADOBE_AAM_SEGMENT
+      occurred_at_col: ASSIGNED_AT
+      ids:
+        - select: UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+  - name: rsBmoEtlOneTrustConsent
+    app_defaults:
+      table: BMO_ETL.ONETRUST_CONSENT
+      occurred_at_col: RECORDED_AT
+      ids:
+        - select: UNIVERSAL_ID
+          type: universal_id
+          entity: customer
+        - select: ANONYMOUS_ID
+          type: anonymous_id
+          entity: customer
+  - name: rsBmoEtlBalanceDaily
+    app_defaults:
+      table: BMO_ETL.BALANCE_DAILY
+      occurred_at_col: AS_OF_DATE
