@@ -19,7 +19,7 @@ models:
       log_direct_edge_info: true
       log_node_metadata: true
       materialization:
-        run_type: incremental
+        run_type: discrete
       edge_sources:
         # Web app event tables
         - from: inputs/rsBmoWebAppIdentifies
