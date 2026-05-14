@@ -1,6 +1,6 @@
 name: bmo_profiles_demo
 schema_version: 98
-connection: bmo_demo
+connection: bmo_profiles_demo
 model_folders:
   - models
 entities:
@@ -11,7 +11,7 @@ entities:
       - customer_id
       - user_id
       - anonymous_id
-      - email
+      - email_hash
       - ios_idfv
       - android_advertising_id
     feature_views:
